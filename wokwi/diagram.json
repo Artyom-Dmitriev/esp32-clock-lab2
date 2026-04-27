@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "author": "Лаб 2 ПиАСИ — вариант 5",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0, "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 100, "left": -120,
+      "attrs": { "color": "red", "label": "RESET" }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": -10, "left": 250,
+      "attrs": { "volume": "0.1" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 60, "left": 250,
+      "attrs": { "color": "blue", "label": "ALARM" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 100, "left": 220,
+      "attrs": { "value": "330" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX",  "$serialMonitor:RX", "", [] ],
+    [ "esp:RX",  "$serialMonitor:TX", "", [] ],
+
+    [ "btn1:1.l", "esp:0",     "green", [ "h0" ] ],
+    [ "btn1:2.l", "esp:GND.1", "black", [ "h0" ] ],
+
+    [ "esp:25",   "bz1:1",     "green", [ "h20" ] ],
+    [ "bz1:2",    "esp:GND.2", "black", [ "h0"  ] ],
+
+    [ "esp:2",    "r1:1",      "green", [ "h20" ] ],
+    [ "r1:2",     "led1:A",    "green", [ "h0"  ] ],
+    [ "led1:C",   "esp:GND.2", "black", [ "h0"  ] ]
+  ],
+  "dependencies": {}
+}
