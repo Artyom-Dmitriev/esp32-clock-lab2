@@ -266,12 +266,26 @@ void resetTimeToZero() {
 // Используем встроенную в Arduino функцию tone() — она генерирует
 // прямоугольную волну на пине заданной частоты. ESP32 поддерживает
 // её через LEDC (LED Controller, аппаратный PWM).
+//
+// Важный нюанс: noTone() на пине, для которого ещё не вызывался tone(),
+// в новых версиях ESP32 Arduino Core печатает в Serial ошибку
+// "LEDC is not initialized". Чтобы не загрязнять лог, держим флаг
+// buzzerInitialized — и не дёргаем noTone() пока tone() не был вызван
+// хотя бы раз.
+
+bool buzzerInitialized = false;   // выставляется при первом buzzerOn()
 
 void buzzerOn(int freqHz = 1000) {
-  tone(BUZZER_PIN, freqHz);     // непрерывный звук
+  tone(BUZZER_PIN, freqHz);       // непрерывный звук заданной частоты
+  buzzerInitialized = true;        // теперь LEDC-канал точно настроен
 }
+
 void buzzerOff() {
-  noTone(BUZZER_PIN);            // выключить
+  // Вызываем noTone() только если LEDC уже инициализирован — иначе ESP32
+  // выводит в Serial ошибку "LEDC is not initialized".
+  if (buzzerInitialized) {
+    noTone(BUZZER_PIN);
+  }
   digitalWrite(BUZZER_PIN, LOW); // на всякий случай — низкий уровень
 }
 
@@ -458,6 +472,15 @@ void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(LED_PIN,    LOW);
   digitalWrite(BUZZER_PIN, LOW);
+
+  // Даём подтяжке внутри ESP32 стабилизироваться (несколько миллисекунд)
+  // и инициализируем состояния кнопки реальным текущим значением пина.
+  // Без этого в первые миллисекунды после старта симулятор Wokwi (а иногда
+  // и реальная плата при холодном старте) может прочитать LOW на GPIO 0,
+  // и наш антидребезг подумает "кнопка нажата → отпущена" → ложный сброс.
+  delay(20);
+  lastButtonState = digitalRead(BUTTON_PIN);
+  stableState     = lastButtonState;
 
   // Восстанавливаем время и будильник из NVS (если были сохранены).
   loadFromNVS();
